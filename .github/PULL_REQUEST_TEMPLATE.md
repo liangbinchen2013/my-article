@@ -12,7 +12,7 @@
 
 - [ ] 文件放在 `src/content/posts/`，文件名使用英文 kebab-case
 - [ ] frontmatter 包含 `title`、`description`、`category`、`pubDate`
-- [ ] `category` 是已有分类（当前为 `exam-essays`）
+- [ ] `category` 是已有分类（当前为 `exam-essays` / `essays`）
 - [ ] 已在本地运行 `npm run build`，构建通过
 - [ ] 图片放在 `public/images/` 并通过 `/images/...` 引用
 

@@ -10,6 +10,11 @@ export const categories: Category[] = [
     name: '考场范文',
     description: '考场作文与范文，记录认真书写的每一次练习。',
   },
+  {
+    slug: 'essays',
+    name: '随笔',
+    description: '赛场内外的记录与随想，写比赛，也写比赛之外的事。',
+  },
 ];
 
 export const categorySlugs = categories.map((category) => category.slug);

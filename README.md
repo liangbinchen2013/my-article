@@ -92,6 +92,7 @@ draft: false              # 可选，true 时不会出现在站内
 | slug | 名称 | 说明 |
 | --- | --- | --- |
 | `exam-essays` | 考场范文 | 考场作文与范文，记录认真书写的每一次练习 |
+| `essays` | 随笔 | 赛场内外的记录与随想，写比赛，也写比赛之外的事 |
 
 文章的 `category` 必须填写上表中的 slug，填错会导致 CI 构建失败。
 
@@ -208,7 +209,7 @@ astro.config.mjs
 ## 常见问题
 
 **Cloudflare 构建失败，提示分类不在允许列表**
-`category` 只能填 `src/data/categories.ts` 中已有的 slug（当前为 `exam-essays`）。
+`category` 只能填 `src/data/categories.ts` 中已有的 slug（当前为 `exam-essays` / `essays`）。
 
 **Cloudflare 显示构建成功，但访问站点是 404**
 检查 Pages 项目的 Build output directory 是否为 `dist`、Production branch 是否为 `main`；再确认最新部署是 Production 部署，而不是只有 Preview 部署。
