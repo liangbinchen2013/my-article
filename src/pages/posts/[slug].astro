@@ -1,0 +1,164 @@
+---
+import { render } from 'astro:content';
+import TableOfContents from '../../components/TableOfContents.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {
+  formatDate,
+  getCategory,
+  getPublishedPosts,
+  getReadingStats,
+  type Post,
+} from '../../lib/posts';
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts();
+
+  return posts.map((post, index) => ({
+    params: { slug: post.id },
+    props: {
+      post,
+      newer: posts[index - 1] ?? null,
+      older: posts[index + 1] ?? null,
+    },
+  }));
+}
+
+interface Props {
+  post: Post;
+  newer: Post | null;
+  older: Post | null;
+}
+
+const { post, newer, older } = Astro.props;
+const category = getCategory(post.data.category);
+
+if (!category) {
+  throw new Error(`未知分类「${post.data.category}」，请检查 src/data/categories.ts`);
+}
+
+const { Content, headings } = await render(post);
+const tocHeadings = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const stats = getReadingStats(post.body);
+---
+
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description}
+  active={category.slug}
+  wide
+  ogType="article"
+>
+  <div class="post-grid">
+    <div class="post-main">
+      <nav class="breadcrumb" aria-label="面包屑">
+        <a href="/">首页</a>
+        <span aria-hidden="true">/</span>
+        <a href={`/categories/${category.slug}/`}>{category.name}</a>
+      </nav>
+
+      <header class="post-header">
+        <h1>{post.data.title}</h1>
+        <p class="post-desc">{post.data.description}</p>
+        <div class="post-meta">
+          <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+          <span aria-hidden="true">·</span>
+          <span>约 {stats.minutes} 分钟</span>
+          <span aria-hidden="true">·</span>
+          <span>{stats.words} 字</span>
+          {post.data.updatedDate && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>更新于 {formatDate(post.data.updatedDate)}</span>
+            </>
+          )}
+        </div>
+      </header>
+
+      {tocHeadings.length > 0 && (
+        <details class="toc-mobile">
+          <summary>本文目录</summary>
+          <TableOfContents items={tocHeadings} />
+        </details>
+      )}
+
+      <article class="prose">
+        <Content />
+      </article>
+
+      <footer class="post-footer">
+        <div class="post-end" aria-hidden="true"><span></span>完<span></span></div>
+
+        {(newer || older) && (
+          <nav class="post-nav" aria-label="相邻文章">
+            {newer && (
+              <a class="post-nav-item" href={`/posts/${newer.id}/`}>
+                <span class="post-nav-label">上一篇</span>
+                <span class="post-nav-title">{newer.data.title}</span>
+              </a>
+            )}
+            {older && (
+              <a class="post-nav-item post-nav-item--next" href={`/posts/${older.id}/`}>
+                <span class="post-nav-label">下一篇</span>
+                <span class="post-nav-title">{older.data.title}</span>
+              </a>
+            )}
+          </nav>
+        )}
+
+        <p class="post-back"><a href="/">← 返回全部文章</a></p>
+      </footer>
+    </div>
+
+    {tocHeadings.length > 0 && (
+      <aside class="toc" aria-label="本文目录">
+        <p class="toc-title">目录</p>
+        <TableOfContents items={tocHeadings} />
+      </aside>
+    )}
+  </div>
+</BaseLayout>
+
+<script>
+  const tocLinks = [
+    ...document.querySelectorAll<HTMLAnchorElement>('.toc a'),
+  ];
+
+  if (tocLinks.length > 0) {
+    const headings = tocLinks
+      .map((link) => {
+        const id = link.getAttribute('href')?.slice(1) ?? '';
+        return document.getElementById(id);
+      })
+      .filter((heading): heading is HTMLElement => heading !== null);
+
+    let ticking = false;
+
+    const update = () => {
+      let activeId = headings[0]?.id;
+
+      for (const heading of headings) {
+        if (heading.getBoundingClientRect().top <= 120) {
+          activeId = heading.id;
+        } else {
+          break;
+        }
+      }
+
+      tocLinks.forEach((link) => {
+        link.classList.toggle('is-active', link.getAttribute('href') === `#${activeId}`);
+      });
+
+      ticking = false;
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    update();
+  }
+</script>

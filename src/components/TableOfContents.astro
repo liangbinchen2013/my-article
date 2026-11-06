@@ -1,0 +1,21 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  items: Heading[];
+}
+
+const { items } = Astro.props;
+---
+
+<ul class="toc-list">
+  {items.map((item) => (
+    <li class:list={['toc-item', `toc-depth-${item.depth}`]}>
+      <a href={`#${item.slug}`}>{item.text}</a>
+    </li>
+  ))}
+</ul>

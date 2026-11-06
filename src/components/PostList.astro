@@ -1,0 +1,29 @@
+---
+import { groupByYear, type Post } from '../lib/posts';
+import PostCard from './PostCard.astro';
+
+interface Props {
+  posts: Post[];
+  emptyText?: string;
+}
+
+const { posts, emptyText = '这里还没有文章。' } = Astro.props;
+const groups = groupByYear(posts);
+---
+
+{
+  posts.length === 0 ? (
+    <p class="empty-state">{emptyText}</p>
+  ) : (
+    groups.map((group) => (
+      <section class="year-group" aria-label={`${group.year} 年`}>
+        <h3 class="year-label">{group.year}</h3>
+        <ol class="post-list">
+          {group.posts.map((post) => (
+            <PostCard post={post} />
+          ))}
+        </ol>
+      </section>
+    ))
+  )
+}

@@ -1,0 +1,72 @@
+---
+import { site } from '../config';
+import { categories } from '../data/categories';
+import { getPublishedPosts } from '../lib/posts';
+import ThemeToggle from './ThemeToggle.astro';
+
+interface Props {
+  active?: string;
+}
+
+const { active = '' } = Astro.props;
+const posts = await getPublishedPosts();
+const counts = new Map(categories.map((category) => [category.slug, 0]));
+
+for (const post of posts) {
+  counts.set(post.data.category, (counts.get(post.data.category) ?? 0) + 1);
+}
+---
+
+<aside class="sidebar" id="sidebar" aria-label="站点目录">
+  <div class="sidebar-inner">
+    <div class="sidebar-head">
+      <a class="brand" href="/" aria-label={`${site.name} 首页`}>
+        <span class="brand-seal" aria-hidden="true">{site.seal}</span>
+        <span class="brand-copy">
+          <span class="brand-name">{site.name}</span>
+          <span class="brand-sub">{site.subtitle}</span>
+        </span>
+      </a>
+      <button class="icon-button sidebar-close" type="button" data-nav-close aria-label="关闭目录">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18"></path>
+        </svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="文章分类">
+      <a
+        class:list={['nav-item', active === 'all' && 'is-active']}
+        href="/"
+        aria-current={active === 'all' ? 'page' : undefined}
+      >
+        <span>全部文章</span>
+        <span class="nav-count">{posts.length}</span>
+      </a>
+
+      <p class="nav-label">分类</p>
+      <ul class="nav-list">
+        {categories.map((category) => (
+          <li>
+            <a
+              class:list={['nav-item', active === category.slug && 'is-active']}
+              href={`/categories/${category.slug}/`}
+              aria-current={active === category.slug ? 'page' : undefined}
+            >
+              <span>{category.name}</span>
+              <span class="nav-count">{counts.get(category.slug) ?? 0}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="sidebar-foot">
+      <ThemeToggle />
+      <p class="sidebar-copy">
+        © {new Date().getFullYear()} {site.name}<br />
+        收录仍在继续
+      </p>
+    </div>
+  </div>
+</aside>

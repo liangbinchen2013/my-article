@@ -1,0 +1,43 @@
+---
+import PostList from '../../components/PostList.astro';
+import { categories } from '../../data/categories';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPublishedPosts, type Post } from '../../lib/posts';
+import type { Category } from '../../data/categories';
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts();
+
+  return categories.map((category) => ({
+    params: { slug: category.slug },
+    props: {
+      category,
+      posts: posts.filter((post) => post.data.category === category.slug),
+    },
+  }));
+}
+
+interface Props {
+  category: Category;
+  posts: Post[];
+}
+
+const { category, posts } = Astro.props;
+---
+
+<BaseLayout title={category.name} description={category.description} active={category.slug}>
+  <nav class="breadcrumb" aria-label="面包屑">
+    <a href="/">首页</a>
+    <span aria-hidden="true">/</span>
+    <span>{category.name}</span>
+  </nav>
+
+  <header class="page-head">
+    <p class="eyebrow">分类</p>
+    <h1>{category.name}</h1>
+    <p class="page-head-desc">{category.description}</p>
+    <p class="page-head-meta">共 {posts.length} 篇文章</p>
+  </header>
+
+  <PostList posts={posts} emptyText="这个分类还在收集中，先去其他分类看看吧。" />
+</BaseLayout>

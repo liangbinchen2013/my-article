@@ -1,0 +1,27 @@
+---
+import { formatDate, getCategory, getReadingStats, type Post } from '../lib/posts';
+
+interface Props {
+  post: Post;
+}
+
+const { post } = Astro.props;
+const category = getCategory(post.data.category);
+const stats = getReadingStats(post.body);
+---
+
+<li class="post-item">
+  <a class="post-card" href={`/posts/${post.id}/`}>
+    <div class="post-card-meta">
+      <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate, 'short')}</time>
+      <span class="post-card-dot" aria-hidden="true">·</span>
+      <span class="post-card-category">{category?.name ?? post.data.category}</span>
+      <span class="post-card-time">{stats.minutes} 分钟</span>
+    </div>
+    <h4 class="post-card-title">
+      {post.data.title}
+      <span class="post-card-arrow" aria-hidden="true">→</span>
+    </h4>
+    <p class="post-card-desc">{post.data.description}</p>
+  </a>
+</li>

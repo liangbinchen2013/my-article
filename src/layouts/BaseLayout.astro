@@ -1,0 +1,181 @@
+---
+import Sidebar from '../components/Sidebar.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import { site } from '../config';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  active?: string;
+  wide?: boolean;
+  ogType?: 'website' | 'article';
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description = site.description,
+  active = '',
+  wide = false,
+  ogType = 'website',
+  noindex = false,
+} = Astro.props;
+
+const pageTitle = title ? `${title} · ${site.name}` : `${site.name} · ${site.subtitle}`;
+---
+
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script is:inline>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          var theme =
+            stored === 'light' || stored === 'dark'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.dataset.theme = theme;
+        } catch (error) {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:site_name" content={site.name} />
+    <meta name="twitter:card" content="summary" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到正文</a>
+
+    <Sidebar active={active} />
+
+    <header class="mobile-bar">
+      <a class="mobile-brand" href="/" aria-label={`${site.name} 首页`}>
+        <span class="brand-seal brand-seal--small" aria-hidden="true">{site.seal}</span>
+        <span>{site.name}</span>
+      </a>
+      <div class="mobile-actions">
+        <ThemeToggle compact />
+        <button
+          class="menu-button"
+          type="button"
+          data-nav-open
+          aria-controls="sidebar"
+          aria-expanded="false"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h10"></path>
+          </svg>
+          <span>目录</span>
+        </button>
+      </div>
+    </header>
+
+    <button
+      class="scrim"
+      type="button"
+      tabindex="-1"
+      data-nav-close
+      aria-label="关闭目录"
+      aria-hidden="true"
+    ></button>
+
+    <div class="page">
+      <main class="main" id="main">
+        <div class:list={['main-inner', wide && 'main-inner--wide']}>
+          <div class="content">
+            <slot />
+          </div>
+          <footer class="site-foot">
+            <span>© {new Date().getFullYear()} {site.name}</span>
+            <a href={site.github} target="_blank" rel="noopener noreferrer">
+              GitHub 仓库 {site.github}
+            </a>
+          </footer>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const root = document.documentElement;
+      const themeButtons = document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]');
+      const themeLabels = document.querySelectorAll<HTMLElement>('[data-theme-label]');
+
+      function applyTheme(theme: 'light' | 'dark', persist: boolean) {
+        root.dataset.theme = theme;
+
+        if (persist) {
+          try {
+            localStorage.setItem('theme', theme);
+          } catch (error) {
+            /* 隐私模式下忽略写入失败 */
+          }
+        }
+
+        themeButtons.forEach((button) => {
+          button.setAttribute('aria-label', theme === 'dark' ? '切换到浅色模式' : '切换到深色模式');
+          button.setAttribute('title', theme === 'dark' ? '切换到浅色模式' : '切换到深色模式');
+        });
+
+        themeLabels.forEach((label) => {
+          label.textContent = theme === 'dark' ? '浅色模式' : '深色模式';
+        });
+      }
+
+      themeButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+          applyTheme(next, true);
+        });
+      });
+
+      applyTheme(root.dataset.theme === 'dark' ? 'dark' : 'light', false);
+
+      const body = document.body;
+      const openButton = document.querySelector<HTMLButtonElement>('[data-nav-open]');
+      const closeButtons = document.querySelectorAll<HTMLElement>('[data-nav-close]');
+
+      function setNav(open: boolean, restoreFocus = false) {
+        body.classList.toggle('nav-open', open);
+        openButton?.setAttribute('aria-expanded', String(open));
+
+        if (!open && restoreFocus) {
+          openButton?.focus();
+        }
+      }
+
+      openButton?.addEventListener('click', () => setNav(true));
+      closeButtons.forEach((button) => {
+        button.addEventListener('click', () => setNav(false, true));
+      });
+
+      document.querySelectorAll<HTMLAnchorElement>('#sidebar a').forEach((link) => {
+        link.addEventListener('click', () => setNav(false));
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && body.classList.contains('nav-open')) {
+          setNav(false, true);
+        }
+      });
+
+      window.matchMedia('(min-width: 961px)').addEventListener('change', (event) => {
+        if (event.matches) setNav(false);
+      });
+    </script>
+  </body>
+</html>
