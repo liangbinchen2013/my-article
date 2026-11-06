@@ -2,7 +2,7 @@
 
 一个开箱即用的 Markdown 文章素材库：左侧是分类目录，首页是站点介绍与文章流，文章支持 Markdown、自动生成目录、代码高亮和深浅色主题。
 
-内容用 GitHub PR 提交：PR 会自动跑类型检查与构建；合并到 `main` 后，工作流重新构建并通过 Wrangler 发布到 Cloudflare Pages。
+内容用 GitHub PR 提交：PR 会自动生成 Cloudflare Pages 预览部署；合并到 `main` 后自动构建并发布到生产域名。
 
 仓库地址：<https://github.com/liangbinchen2013/my-article>
 
@@ -10,7 +10,7 @@
 
 - [Astro 7](https://astro.build/)：静态站点 + Markdown 内容集合
 - Shiki：双主题代码高亮
-- GitHub Actions + [wrangler-action](https://github.com/cloudflare/wrangler-action)：构建并直传 Cloudflare Pages
+- Cloudflare Pages Git 集成：推送自动构建，PR 自动预览，`main` 自动部署
 
 ## 本地开发
 
@@ -106,8 +106,8 @@ draft: false              # 可选，true 时不会出现在站内
 - **新增**：打开仓库的 `src/content/posts/` → **Add file → Create new file** → 输入文件名和内容 → 选择「Create a new branch for this commit and start a pull request」→ 提交 PR。
 - **修改**：打开要修改的 `.md` 文件 → 右上角铅笔图标 → 编辑后创建新分支并提交 PR。
 - **删除**：打开文件 → 右上角垃圾桶图标 → 提交 PR。
-- PR 会自动运行 `npm run check` 和 `npm run build`，检查 frontmatter、分类和构建错误。
-- 检查通过后合并到 `main`，GitHub Actions 会自动重新构建并部署到 Cloudflare Pages，部署地址可以在 Actions 或仓库的 `production` environment 中查看。
+- 提交 PR 后，Cloudflare Pages 会自动为这个 PR 构建预览部署，预览链接会出现在 PR 的检查记录和 Cloudflare 项目里。
+- 合并到 `main` 后，Cloudflare Pages 自动构建生产部署，自定义域名随之更新。
 
 **本地操作**
 
@@ -127,7 +127,7 @@ git push -u origin article/my-update
 
 推送后在 GitHub 创建 PR，检查通过并合并即可。合并前也可以本地 `npm run dev` 预览效果。
 
-> PR 阶段只做构建校验，不会部署预览环境；线上更新发生在合并到 `main` 之后。
+> PR 阶段只会生成预览部署，不影响生产域名；生产环境只在合并到 `main` 后更新。
 
 ## 修改站点信息
 
@@ -137,58 +137,44 @@ git push -u origin article/my-update
 
 ## Cloudflare Pages 部署配置（首次）
 
-### 1. 创建 Cloudflare Pages 项目
+本项目使用 **Cloudflare Pages 的 Git 集成**：Cloudflare 直接连接 GitHub 仓库，推送后自动安装依赖、构建并部署。不需要 GitHub Actions，也不需要本地手动上传。
 
-本项目使用 **Direct Upload**（由 GitHub Actions 上传构建产物），不需要在 Cloudflare 后台连接 Git 仓库。
+### 1. 连接 GitHub 仓库
 
-在 Cloudflare Dashboard → Workers & Pages → Create → Pages 中创建一个项目，或用 CLI：
+Cloudflare Dashboard → Workers & Pages → Create → Pages → Connect to Git，选择 `liangbinchen2013/my-article`。
 
-```bash
-npx wrangler login
-npx wrangler pages project create <项目名> --production-branch main
-```
+构建配置：
 
-记下两样东西：
-
-- **项目名**（下一步填到 `CLOUDFLARE_PROJECT_NAME`）
-- **Account ID**（Dashboard 右侧栏，或运行 `npx wrangler whoami`）
-
-### 2. 配置 GitHub Secrets 和 Variables
-
-仓库 Settings → Secrets and variables → Actions。
-
-**Secrets：**
-
-| 名称 | 内容 |
+| 配置项 | 值 |
 | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | Cloudflare API Token，权限至少包含 `Account → Cloudflare Pages → Edit` |
-| `CLOUDFLARE_ACCOUNT_ID` | 你的 Cloudflare Account ID |
+| Production branch | `main` |
+| Framework preset | `Astro` |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Root directory | 留空 |
 
-**Variables：**
+环境变量：
 
-| 名称 | 内容 |
+| 变量 | 值 |
 | --- | --- |
-| `CLOUDFLARE_PROJECT_NAME` | 第 2 步创建的 Pages 项目名 |
+| `NODE_VERSION` | `24` |
 
-API Token 在 Cloudflare Dashboard → My Profile → API Tokens → Create Token 中创建，账户资源选择你的账号即可。
+> 构建输出目录必须是 `dist`，生产分支必须是 `main`。这两项配错时，Cloudflare 可能显示构建成功，但访问站点是 404。
 
-### 3. 工作流行为
-
-`.github/workflows/deploy.yml`：
-
-- **Pull Request**：`npm ci` → `npm run check` → `npm run build`，只做校验，不部署；检查不通过无法合并（建议在分支保护中勾选 status check）。
-- **Push / merge 到 `main`**：重新构建，上传产物，然后用 Wrangler 发布到 Cloudflare Pages，部署地址显示在 Actions 的 `Deploy to Cloudflare Pages` job 和 `production` environment 中。
-- **手动触发**：在 `main` 分支上，Actions → Build & Deploy → Run workflow。
-
-### 4. 自定义域名（可选）
+### 2. 自定义域名（可选）
 
 Cloudflare Dashboard → 你的 Pages 项目 → Custom domains → Set up a custom domain。域名托管在 Cloudflare 时，DNS 记录会自动配置。
+
+### 3. 部署流程
+
+- 提交 PR：Cloudflare 自动构建预览部署，预览链接会出现在 PR 检查记录中。
+- 合并到 `main`：Cloudflare 自动构建生产部署，自定义域名同步更新。
+- 查看构建状态和日志：Dashboard → Workers & Pages → 你的项目 → Deployments。
 
 ## 目录结构
 
 ```text
 .github/
-  workflows/deploy.yml      # PR 校验 + main 部署
   PULL_REQUEST_TEMPLATE.md
 public/
   favicon.svg
@@ -213,23 +199,19 @@ astro.config.mjs
 
 ## 常见问题
 
-**部署报 `Missing repository variable CLOUDFLARE_PROJECT_NAME`**
-仓库 Variables 里还没有配置项目名，或配置在了 Environment 而不是仓库级别。
-
-**部署报项目不存在 / authentication error**
-先确认 Pages 项目已创建，名称与 `CLOUDFLARE_PROJECT_NAME` 完全一致；再确认 API Token 具备 Cloudflare Pages 编辑权限，且 Account ID 正确。
-
-**PR 构建失败，提示分类不在允许列表**
+**Cloudflare 构建失败，提示分类不在允许列表**
 `category` 只能填 `src/data/categories.ts` 中已有的 slug（默认 `thinking` / `reading` / `methods` / `writing`）。
 
+**Cloudflare 显示构建成功，但访问站点是 404**
+检查 Pages 项目的 Build output directory 是否为 `dist`、Production branch 是否为 `main`；再确认最新部署是 Production 部署，而不是只有 Preview 部署。
+
 **新增、修改或删除文章后，线上没有变化**
-确认 PR 已经合并到 `main`，然后到仓库 Actions 中查看构建和部署是否成功；只在 PR 里提交不会部署。部署成功后如果浏览器仍显示旧内容，刷新或等待 Cloudflare 缓存更新。
+PR 阶段只生成预览部署，生产环境只在合并到 `main` 后更新。合并后到 Cloudflare Dashboard → 项目 → Deployments 查看构建是否成功；如果失败，打开该次部署的日志查看原因。
 
 **首页总字数需要手动改吗**
 不需要。每次构建时会自动统计所有已发布文章（不含 `draft: true`）的字数，并更新首页统计。
 
-**不要同时开启 Cloudflare 的 Git 集成**
-本项目走的是 Actions 直传；如果又在 Cloudflare 后台连接了同一个 GitHub 仓库，会出现重复构建和互相覆盖。两者选其一，保留 Actions 即可删掉后台的 Git 连接。
+本项目固定使用 Cloudflare Pages 的 Git 集成部署，不需要 GitHub Actions，也不要在本地用 Wrangler 重复上传。
 
 **图片放在哪里**
 `public/images/`，引用路径以 `/images/` 开头。Astro 会把 `public/` 原样复制到构建产物中。
