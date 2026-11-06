@@ -43,7 +43,7 @@ npm run preview   # 预览构建结果
 ---
 title: 文章标题
 description: 一句话摘要，会显示在文章列表和页面描述中
-category: thinking
+category: exam-essays
 pubDate: 2026-11-06
 updatedDate: 2026-11-06   # 可选，修改文章时更新
 draft: false              # 可选，true 时不会出现在站内
@@ -91,10 +91,7 @@ draft: false              # 可选，true 时不会出现在站内
 
 | slug | 名称 | 说明 |
 | --- | --- | --- |
-| `thinking` | 思考 | 关于时间、选择与日常秩序的观察和追问 |
-| `reading` | 阅读 | 书与长文的读后笔记，以及值得反复回看的句子 |
-| `methods` | 方法 | 可以反复使用的整理、写作与思考框架 |
-| `writing` | 写作 | 关于表达、结构与叙事手艺的练习 |
+| `exam-essays` | 考场范文 | 考场作文与范文，记录认真书写的每一次练习 |
 
 文章的 `category` 必须填写上表中的 slug，填错会导致 CI 构建失败。
 
@@ -211,7 +208,7 @@ astro.config.mjs
 ## 常见问题
 
 **Cloudflare 构建失败，提示分类不在允许列表**
-`category` 只能填 `src/data/categories.ts` 中已有的 slug（默认 `thinking` / `reading` / `methods` / `writing`）。
+`category` 只能填 `src/data/categories.ts` 中已有的 slug（当前为 `exam-essays`）。
 
 **Cloudflare 显示构建成功，但访问站点是 404**
 检查 Pages 项目的 Build output directory 是否为 `dist`、Production branch 是否为 `main`；再确认最新部署是 Production 部署，而不是只有 Preview 部署。
