@@ -102,9 +102,11 @@ const pageTitle = title ? `${title} · ${site.name}` : `${site.name} · ${site.s
           </div>
           <footer class="site-foot">
             <span>© {new Date().getFullYear()} {site.name}</span>
-            <a href={site.github} target="_blank" rel="noopener noreferrer">
-              GitHub 仓库 {site.github}
-            </a>
+            <span class="site-foot-links">
+              <a href={site.github} target="_blank" rel="noopener noreferrer">GitHub 仓库</a>
+              <span class="site-foot-sep" aria-hidden="true">·</span>
+              <a href={site.luogu} target="_blank" rel="noopener noreferrer">洛谷账号</a>
+            </span>
           </footer>
         </div>
       </main>

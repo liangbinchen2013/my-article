@@ -10,6 +10,7 @@
 
 - [Astro 7](https://astro.build/)：静态站点 + Markdown 内容集合
 - Shiki：双主题代码高亮
+- KaTeX：Markdown 中的 LaTeX 数学公式
 - Cloudflare Pages Git 集成：推送自动构建，PR 自动预览，`main` 自动部署
 
 ## 本地开发
@@ -58,7 +59,17 @@ draft: false              # 可选，true 时不会出现在站内
 ![图片描述](/images/example.jpg)
 ```
 
-5. 文章按 `pubDate` 倒序排列，首页按年份分组；首页的总字数、分类计数都会自动重新计算，不需要手动维护。
+5. 正文支持 LaTeX 数学公式，由 KaTeX 在构建时渲染：
+   - 行内公式：`$E = mc^2$`
+   - 独立公式：
+
+   ```markdown
+   $$
+   \int_0^1 x^2 \, dx = \frac{1}{3}
+   $$
+   ```
+
+6. 文章按 `pubDate` 倒序排列，首页按年份分组；首页的总字数、分类计数都会自动重新计算，不需要手动维护。
 
 ### 修改文章
 

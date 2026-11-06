@@ -412,6 +412,17 @@ html[data-theme='dark'] .icon-moon {
   text-decoration-color: var(--accent);
 }
 
+.site-foot-links {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.site-foot-sep {
+  color: var(--border-strong);
+}
+
 /* ---------- Mobile bar & drawer ---------- */
 
 .mobile-bar {
@@ -1010,6 +1021,20 @@ html[data-theme='dark'] .prose .astro-code span {
   background: var(--code-bg);
   font-family: var(--font-mono);
   font-size: 0.85em;
+}
+
+.prose .katex {
+  font-size: 1.06em;
+}
+
+.prose .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.4em 0;
+}
+
+.prose .katex-display > .katex {
+  white-space: normal;
 }
 
 /* ---------- Table of contents ---------- */

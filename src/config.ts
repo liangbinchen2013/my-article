@@ -13,4 +13,5 @@ export const site = {
     ],
   },
   github: 'https://github.com/liangbinchen2013/my-article/',
+  luogu: 'https://www.luogu.com.cn/user/1432496',
 } as const;
